@@ -1,10 +1,14 @@
 # Interpretability-in-ML
-Interpretability techniques in Machine Learning including Feature Viz, Interp in LLMs, and other techniques.
+This is a small demo on using
+* Tricking a classifier to predict the wrong class by using noise in gradient vectors.
+* Using Leap Labs Library to study feature visualizations, regularization, and to deduce what the model has learned.
+* Are Attention Maps a good evaluation technique to study interpretability in LLMs? *Short Answer: No*
 
+  
 ## What is ML Interpretability? 
-Machine Learning, while dominant in its performance, poses some threats to ethical guidelines, safety in its responses regardless of the *type* of Deep Neural Network. It could be LLMs, VLMs, Motion in Robotics, Self-Driving cars etc. <br>
+Machine Learning, while dominant in its performance, poses some threats to ethical guidelines and safety in its responses, regardless of the type of Deep Neural Network. It could be LLMs, VLMs, Motion in Robotics, Self-Driving cars, etc. <br>
 
-Our goal is to be able to answer what exactly is going inside the model by using the following questions <br>
+Our goal is to be able to answer what exactly is going on inside the model by using the following questions <br>
 1. What did the model learn?
 2. What features from the input make the model generate certain outputs?
 
@@ -14,16 +18,16 @@ Knowing these things or these questions or knowing the mechanisms well, it allow
 3. Discover novel insights from data. 
 
 <br>
-This gave rise to novel architectures such as Sparse Autoencoders that are widely adopted in Deep Learning to uncover hidden realities of large neural networks. 
+This gave rise to novel architectures, such as Sparse Autoencoders, which are widely adopted in Deep Learning to uncover the hidden realities of large neural networks. 
 
 ### Tricking the Classifier
-Here I use a pre-trained ResNet18 that was pretrained using ImageNet to demonstrate how tricking a classifier can happen very easily by injecting small noise. The idea is pretty simple. <br>
-Backpropogation is computed across all the layers in the model starting from the output *Y* to the first layer of the model. But what if we could compute gradient of the output w.r.t the input tensor. <br>
-By cloning the input tensor (to avoid making changes to the original tensor) and enabling its gradient allows us to compute backpropogation using  `loss.backward` after computing loss between the target class and the output. Then we add noise to the gradient of the input tensor and add it to the tensor much like gradient update **EXCEPT** that we **ADD** it instead of subtracting it. <br>
+Here, I use a pre-trained ResNet18 that was pretrained using ImageNet to demonstrate how tricking a classifier can happen very easily by injecting small noise. The idea is pretty simple. <br>
+Backpropagation is computed across all the layers in the model, starting from the output *Y* to the first layer of the model. But what if we could compute the gradient of the output with respect to the input tensor? <br>
+By cloning the input tensor (to avoid making changes to the original tensor) and enabling its gradient allows us to compute backpropagation using  `loss.backward` after computing loss between the target class and the output. Then we add noise to the gradient of the input tensor and add it to the tensor, much like gradient update **EXCEPT** that we **ADD** it instead of subtracting it. <br>
 
-Very important and subtle detain in gradient update is the '-' sign which indicates moving against direction of the gradient which points to the decrease in loss. Here instead of subtracting, we *add* the updated noised gradient to the input tensor. Apart from '+' sign, everything is same as the gradient update. <br>
+Very important and subtle detain in gradient update is the '-' sign, which indicates moving against the direction of the gradient, which points to the decrease in loss. Here, instead of subtracting, we *add* the updated noised gradient to the input tensor. Apart from the '+' sign, everything is the same as the gradient update. <br>
 
-We retrive the final tensor from the model after updating the tensor with noised injection after `x` number of steps such that noised input is passed to the model at each iteration to make sure it gets further away from the target class.
+We retrieve the final tensor from the model after updating the tensor with noisy injection after `x` number of steps, such that noisy input is passed to the model at each iteration to make sure it gets further away from the target class.
 
 <div style="display: flex; justify-content: space-around; align-items: center;">
 
@@ -42,22 +46,22 @@ We retrive the final tensor from the model after updating the tensor with noised
 Now that we have retrieved the adversarial tensor (shown above), the predicted class is 393 (Persian Cat) instead of 407 (Fish). So models look at patterns in their input that may not make sense for humans. 
 
 ### Using Leap Labs for Interpretability
-Leap labs comes with an interpretability engine to evaluate how our models "think" before predicting a class.
+Leap Labs comes with an interpretability engine to evaluate how our models "think" before predicting a class.
 - It shows what our model has learned and shows what our model should think like to predict a certain class. 
-- It shows entanglement between classes: ie features that are shared across different classes which can help us identify where and why our model got confused. Higher entanglement is usally attained between similar objects. 
-- Isolate features to help us identify what part of the input is the model referring to for a particular image. Or what features is it looking at each input for each class. Something useful for studying entanglement. 
+- It shows entanglement between classes: ie, features that are shared across different classes, which can help us identify where and why our model got confused. Higher entanglement is usually attained between similar objects. 
+- Isolate features to help us identify what part of the input the model is referring to for a particular image. Or what features is it looking at for each input for each class? Something useful for studying entanglement. 
 
 ### Feature Visualisation
-It is also one of the important techniques to studying ML model's behaviours. It lets us understand what feature a particular unit in a neural network has learned. For example, what features is a convolutional layer looking at? <br>
+It is also one of the important techniques for studying ML models' behaviours. It lets us understand what feature a particular unit in a neural network has learned. For example, what features is a convolutional layer looking at? <br>
 
-For feature visulisation, we explore and use the differentiability of the model. 
+For feature visualization, we explore and use the differentiability of the model. 
 
 #### Understanding Feature Visualisation
-Since neural networks are differentiable w.r.t inputs, we can use a layer's activations as objective and optimize the input to maximize the this objective. <br>
+Since neural networks are differentiable with respect to inputs, we can use a layer's activations as an objective and optimize the input to maximize this objective. <br>
 
-We can optimize for logits as well as an objective. In all the cases we optimize an initial noisy image to maximize a particular output class. <br>
+We can optimize for logits as well as an objective. In all the cases, we optimize an initial noisy image to maximize a particular output class. <br>
 
-However it is not very simple since optimizing from random noise ends up having high-frequency features that do not look very natural.
+However, it is not very simple since optimizing from random noise ends up having high-frequency features that do not look very natural.
 
 <div style="display: flex; justify-content: center; align-items: center;">
   <div style="text-align: center;">
@@ -69,13 +73,13 @@ However it is not very simple since optimizing from random noise ends up having 
 So we use *regularization* to force the optimization to produce more naturally looking images. <br>
 
 ### Regularization
-Since it is an optimization problem, we can set up constraints much like we do in lagrange optimization in Calculus II or in Convex Optimization. Adding such constraints to our objective make the gradient move in directions that exhibit more of a certain pattern. 
+Since it is an optimization problem, we can set up constraints much like we do in Lagrange optimization in Calculus II or in Convex Optimization. Adding such constraints to our objective makes the gradient move in directions that exhibit more of a certain pattern. 
 
 - L1 Regularization: pushes weights to 0. The model uses the least number of features. 
 
-We optimize the objective function in such a way that it generalises well to the data it has seen. We optimize it in such a way that it penalizes high variance neighboring pixels because such a portion of an image indicates noise. <br>
+We optimize the objective function in such a way that it generalizes well to the data it has seen. We optimize it in such a way that it penalizes high variance neighboring pixels because such a portion of an image indicates noise. <br>
 
-This is called `Feature Penalization`. Pixels very close to each other should be similar so it penalizes high variance neighbouring pixels. But this could penalize the edges where pixels change drastically for example person's clothes and background. <br>
+This is called `Feature Penalization`. Pixels very close to each other should be similar, so it penalizes high variance neighbouring pixels. But this could penalize the edges where pixels change drastically, for example person's clothes and background. <br>
 
 We use transformation robustness where we transform the input (rotate, scale) so that feature visualisation is invariant to transformations of the image. <br>
 
@@ -97,11 +101,11 @@ This is why the prototyping works really well in Leap Labs and the images look v
 </div>
 
 ## Interpretability for Language Models
-A language model is much like a stochastic probabilistic machine. It predicts the next token by assiging logits to it and using softmax or argmax we compute the token with highest logit/probability. <br>
+A language model is much like a stochastic probabilistic machine. It predicts the next token by assigning logits to it, and using softmax or argmax, we compute the token with the highest logit/probability. <br>
 
-Now we could proceed exactly how we did for vision models, compute backpropogation of the output w.r.t the input and optimize the input to maximize a particular output. However, the input space is discrete unlike vision where we have pixels ranging from 0-255 values. <br>
+Now we could proceed exactly how we did for vision models, compute backpropogation of the output w.r.t the input, and optimize the input to maximize a particular output. However, the input space is discrete, unlike vision, where we have pixels ranging from 0-255 values. <br>
 
-Similar experiement was run Leap Labs in which they found the words most associated with the token in the prompt. For example for token *good*: <br>
+Similar experiement was run by Leap Labs in which they found the words most associated with the token in the prompt. For example for token *good*: <br>
 
 `got Rip Hut Jesus Shooting basketball Protective Beautiful Laughing good` <br>
 
